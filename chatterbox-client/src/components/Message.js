@@ -1,57 +1,36 @@
 import React, { useState } from "react";
-import EditMessage from "./EditMessage";
 
-function Message({ message, currentUser, onMessageDelete, onUpdateMessage }) {
-  const [isEditing, setIsEditing] = useState(false);
+function EditMessage({ id, body, onUpdateMessage }) {
+  const [messageBody, setMessageBody] = useState(body);
 
-  const { id, username, body, created_at: createdAt } = message;
+  function handleFormSubmit(e) {
+    e.preventDefault();
 
-  const timestamp = new Date(createdAt).toLocaleTimeString();
-
-  const isCurrentUser = currentUser.username === username;
-
-  function handleDeleteClick() {
-    fetch(`http://localhost:4000/messages/${id}`, {
-      method: "DELETE",
-    });
-
-    onMessageDelete(id);
-  }
-
-  function handleUpdateMessage(updatedMessage) {
-    setIsEditing(false);
-    onUpdateMessage(updatedMessage);
+    fetch(`http://localhost:9292/messages/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        body: messageBody,
+      }),
+    })
+      .then((r) => r.json())
+      .then((updatedMessage) => onUpdateMessage(updatedMessage));
   }
 
   return (
-    <li>
-      <span className="user">{username}</span>
-      <span className="time">{timestamp}</span>
-      {isEditing ? (
-        <EditMessage
-          id={id}
-          body={body}
-          onUpdateMessage={handleUpdateMessage}
-        />
-      ) : (
-        <p>{body}</p>
-      )}
-      {isCurrentUser ? (
-        <div className="actions">
-          <button onClick={() => setIsEditing((isEditing) => !isEditing)}>
-            <span role="img" aria-label="edit">
-              ✏️
-            </span>
-          </button>
-          <button onClick={handleDeleteClick}>
-            <span role="img" aria-label="delete">
-              🗑
-            </span>
-          </button>
-        </div>
-      ) : null}
-    </li>
+    <form className="edit-message" onSubmit={handleFormSubmit}>
+      <input
+        type="text"
+        name="body"
+        autoComplete="off"
+        value={messageBody}
+        onChange={(e) => setMessageBody(e.target.value)}
+      />
+      <input type="submit" value="Save" />
+    </form>
   );
 }
 
-export default Message;
+export default EditMessage;
